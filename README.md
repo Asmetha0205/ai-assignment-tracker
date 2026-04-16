@@ -19,15 +19,7 @@ It combines AI-based features with progress tracking and interactive tools to ma
 
 ## My Contribution
 
-This was a team project. I contributed significantly to the AI-related features, including:
-
-- Study plan generation
-- Summarization
-- Quiz generation
-- Flashcard generation
-- AI-based question answering
-
-These features were developed collaboratively within the team, and I was actively involved in their implementation and integration.
+This was a team project, and I contributed mainly to the AI-related modules and their integration within the application. I was involved in features such as study plan generation, summarization, quiz and flashcard generation, and the AI assistant, while also collaborating with the team on improving the overall functionality and user experience.
 
 ## Tech Stack
 
