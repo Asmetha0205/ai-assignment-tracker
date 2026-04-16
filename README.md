@@ -33,6 +33,7 @@ Backend:
 
 AI / ML:
 - Gemini API
+- Groq API
 - BART
 - RoBERTa
 
