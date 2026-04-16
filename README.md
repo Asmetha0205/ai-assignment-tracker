@@ -11,8 +11,10 @@ It combines AI-based features with progress tracking and interactive tools to ma
 * Generates personalized study plans based on syllabus and deadlines
 * Summarizes long notes into short, easy-to-understand content
 * Creates quizzes automatically for self-assessment
+* Generates flashcards for quick revision
 * Tracks progress and performance over time
 * Includes leaderboard, streaks, and points to keep users engaged
+* Shows exam countdowns and upcoming deadlines
 * Provides an AI assistant for explanations and doubt solving
 
 ## My Contribution
@@ -22,6 +24,7 @@ This was a team project. I contributed significantly to the AI-related features,
 - Study plan generation
 - Summarization
 - Quiz generation
+- Flashcard generation
 - AI-based question answering
 
 These features were developed collaboratively within the team, and I was actively involved in their implementation and integration.
@@ -47,9 +50,11 @@ Database & Auth:
 
 ## Features
 
-- AI-generated study plans
-- Smart summaries
-- Auto quiz generator
-- AI assistant
-- Progress tracker
-- Leaderboard and rewards system
+* AI-generated study plans
+* Smart summaries
+* Auto quiz generator
+* Flashcard generator
+* AI assistant
+* Exam countdown and deadline tracker
+* Progress tracker
+* Leaderboard and rewards system
