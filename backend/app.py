@@ -638,11 +638,7 @@ def get_progress(user_id):
         }
         try:
             # Get ALL quiz results for stats calculation
-<<<<<<< HEAD
             all_quiz_results = db.collection('quiz_results').where(filter=firestore.FieldFilter('user_id', '==', user_id)).stream()
-=======
-            all_quiz_results = db.collection('quiz_results').where('user_id', '==', user_id).stream()
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
             
             all_results = []
             for result in all_quiz_results:

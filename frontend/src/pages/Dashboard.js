@@ -25,10 +25,6 @@ const Dashboard = ({ user }) => {
   const [stats, setStats] = useState({
     totalPlans: 0,
     completedPlans: 0,
-<<<<<<< HEAD
-=======
-    inProgressPlans: 0,
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
     totalTopics: 0,
     completedTopics: 0,
     streak: 0,
@@ -52,15 +48,8 @@ const Dashboard = ({ user }) => {
 
         let totalPlans = 0;
         let completedPlans = 0;
-<<<<<<< HEAD
         let totalTopics = 0;
         let completedTopics = 0;
-=======
-        let inProgressPlans = 0;
-        let totalTopics = 0;
-        let completedTopics = 0;
-        const planProgress = [];
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
 
         if (Array.isArray(plans)) {
           plans.forEach((plan) => {
@@ -70,22 +59,6 @@ const Dashboard = ({ user }) => {
                 totalPlans += 1;
                 // Calculate if plan is fully completed
                 const completedDays = Array.isArray(plan.completed_days) ? plan.completed_days.length : 0;
-<<<<<<< HEAD
-=======
-                const completionPercentage = Math.round((completedDays / scheduleLength) * 100);
-                
-                planProgress.push({
-                  planName: plan.plan.name || 'Untitled Plan',
-                  completed: completedDays,
-                  total: scheduleLength,
-                  percentage: completionPercentage
-                });
-
-                totalTopics += scheduleLength;
-                completedTopics += completedDays;
-
-                // Count completed plans (100% done) and in-progress plans (1-99% done)
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
                 if (completedDays >= scheduleLength) {
                   completedPlans += 1;
                 } else if (completedDays > 0) {
@@ -108,10 +81,6 @@ const Dashboard = ({ user }) => {
         setStats({
           totalPlans,
           completedPlans,
-<<<<<<< HEAD
-=======
-          inProgressPlans,
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
           totalTopics,
           completedTopics,
           streak: userData.streak || 0,
@@ -210,54 +179,15 @@ const Dashboard = ({ user }) => {
   const hasAnyProgress = stats.completedTopics > 0 && !planFinished;
 
   const statCards = [
-<<<<<<< HEAD
     { label: 'Total Plans', value: stats.totalPlans, icon: Target, color: 'bg-blue-500' },
     { label: 'Completed', value: stats.completedPlans, icon: CheckCircle, color: 'bg-green-500' },
     { label: 'Streak', value: `${stats.streak} days`, icon: Flame, color: 'bg-orange-500' },
     { label: 'Points', value: stats.points, icon: Award, color: 'bg-purple-500' },
-=======
-    {
-      label: 'Study Plans',
-      value: stats.totalPlans,
-      description: stats.totalPlans === 0 ? 'No plans yet' : 'Active plan',
-      icon: BookOpen,
-      color: 'bg-indigo-500',
-    },
-    {
-      label: 'Active Plan Completion',
-      value: planFinished ? 'Completed' : (stats.totalTopics > 0 ? 'In Progress' : 'No Progress'),
-      description: stats.totalPlans > 0 ? `${stats.completedTopics || 0} of ${stats.totalTopics} topics` : 'No active plans',
-      icon: planFinished ? CheckCircle : BookOpen,
-      color: planFinished ? 'bg-green-500' : (stats.totalTopics > 0 ? 'bg-blue-500' : 'bg-gray-500'),
-    },
-    {
-      label: 'Current Streak',
-      value: `${stats.streak} ${stats.streak === 1 ? 'day' : 'days'}`,
-      description: 'Keep it going!',
-      icon: Flame,
-      color: 'bg-orange-500',
-    },
-    {
-      label: 'Total Points',
-      value: stats.points,
-      description: 'Earn more by studying!',
-      icon: Award,
-      color: 'bg-purple-500',
-    },
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
   ];
 
   const completionPercentage = stats.totalTopics > 0 
     ? Math.round((stats.completedTopics / stats.totalTopics) * 100) 
     : 0;
-<<<<<<< HEAD
-=======
-    
-  // Calculate overall progress based on completed topics
-  const totalProgress = stats.totalTopics > 0 
-    ? Math.round((stats.completedTopics / stats.totalTopics) * 100)
-    : 0;
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
 
   return (
     <div className="min-h-screen py-8 px-4">

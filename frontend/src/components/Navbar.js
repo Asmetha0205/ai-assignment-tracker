@@ -14,13 +14,9 @@ import {
   Menu, 
   X,
   ListChecks,
-<<<<<<< HEAD
   UserCircle,
   Layers,
   CalendarDays
-=======
-  UserCircle
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
 } from 'lucide-react';
 
 const Navbar = ({ user }) => {
@@ -43,11 +39,8 @@ const Navbar = ({ user }) => {
     { to: '/summarizer', icon: FileText, label: 'Summarizer', bgColor: 'bg-green-50', hoverBgColor: 'hover:bg-green-100' },
     { to: '/assistant', icon: Bot, label: 'AI Assistant', bgColor: 'bg-pink-50', hoverBgColor: 'hover:bg-pink-100' },
     { to: '/quiz', icon: ListChecks, label: 'Quiz', bgColor: 'bg-yellow-50', hoverBgColor: 'hover:bg-yellow-100' },
-<<<<<<< HEAD
     { to: '/flashcards', icon: Layers, label: 'Flashcards', bgColor: 'bg-teal-50', hoverBgColor: 'hover:bg-teal-100' },
     { to: '/exams', icon: CalendarDays, label: 'Exams', bgColor: 'bg-orange-50', hoverBgColor: 'hover:bg-orange-100' },
-=======
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
     { to: '/progress', icon: TrendingUp, label: 'Progress', bgColor: 'bg-indigo-50', hoverBgColor: 'hover:bg-indigo-100' },
     { to: '/leaderboard', icon: Trophy, label: 'Leaderboard', bgColor: 'bg-red-50', hoverBgColor: 'hover:bg-red-100' },
   ];

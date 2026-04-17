@@ -4,7 +4,6 @@ import Card from '../components/Card';
 import { summarizeNotes } from '../api/services';
 import axios from '../api/axios';
 import toast from 'react-hot-toast';
-<<<<<<< HEAD
 import { FileText, Sparkles, Copy, Loader2, ArrowLeft, Upload, X, Clock, Download } from 'lucide-react';
 import { saveToHistory, getHistory } from '../utils/historyUtils';
 import { exportSummaryPDF } from '../utils/exportPDF';
@@ -26,9 +25,6 @@ const parseMarkdown = (text) => {
 };
 
 const FEATURE = 'summarizer';
-=======
-import { FileText, Sparkles, Copy, Loader2, ArrowLeft, Upload, X } from 'lucide-react';
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
 
 const NoteSummarizer = ({ user }) => {
   const navigate = useNavigate();
@@ -36,7 +32,6 @@ const NoteSummarizer = ({ user }) => {
   const [summary, setSummary] = useState('');
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
-<<<<<<< HEAD
   const [showHistory, setShowHistory] = useState(false);
   const [historyItems, setHistoryItems] = useState([]);
 
@@ -50,19 +45,13 @@ const NoteSummarizer = ({ user }) => {
   React.useEffect(() => {
     refreshHistory();
   }, [refreshHistory]);
-=======
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
       if (selectedFile.type === 'application/pdf') {
         setFile(selectedFile);
-<<<<<<< HEAD
         setInputText('');
-=======
-        setInputText(''); // Clear text when file is selected
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
         toast.success('PDF file selected!');
       } else {
         toast.error('Please select a PDF file');
@@ -70,13 +59,7 @@ const NoteSummarizer = ({ user }) => {
     }
   };
 
-<<<<<<< HEAD
   const handleRemoveFile = () => { setFile(null); };
-=======
-  const handleRemoveFile = () => {
-    setFile(null);
-  };
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
 
   const handleSummarize = async () => {
     if (!inputText.trim() && !file) {
@@ -86,7 +69,6 @@ const NoteSummarizer = ({ user }) => {
     setLoading(true);
     try {
       let response;
-<<<<<<< HEAD
       if (file) {
         const formData = new FormData();
         formData.append('file', file);
@@ -95,22 +77,6 @@ const NoteSummarizer = ({ user }) => {
       } else {
         response = await summarizeNotes(inputText);
       }
-=======
-      
-      if (file) {
-        // Upload PDF and summarize
-        const formData = new FormData();
-        formData.append('file', file);
-        
-        // Use axios directly for file upload (axios will handle Content-Type automatically)
-        const axiosResponse = await axios.post('/api/notes/summarize', formData);
-        response = axiosResponse.data;
-      } else {
-        // Summarize text
-        response = await summarizeNotes(inputText);
-      }
-      
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
       if (response.success) {
         setSummary(response.summary);
         const title = (file?.name || inputText.slice(0, 60)) || 'Summary';
@@ -183,58 +149,26 @@ const NoteSummarizer = ({ user }) => {
                 Your Notes
               </h2>
 
-<<<<<<< HEAD
               {/* PDF Upload */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Upload PDF (Optional)</label>
-=======
-              {/* PDF Upload Section */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Upload PDF (Optional)
-                </label>
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
                 {file ? (
                   <div className="border border-indigo-300 bg-indigo-50 rounded-lg p-3 flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <FileText className="w-5 h-5 text-indigo-600" />
                       <span className="text-sm text-gray-700">{file.name}</span>
                     </div>
-<<<<<<< HEAD
                     <button onClick={handleRemoveFile} className="p-1 hover:bg-indigo-200 rounded transition-colors" title="Remove file">
-=======
-                    <button
-                      onClick={handleRemoveFile}
-                      className="p-1 hover:bg-indigo-200 rounded transition-colors"
-                      title="Remove file"
-                    >
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
                       <X className="w-4 h-4 text-indigo-600" />
                     </button>
                   </div>
                 ) : (
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition-all cursor-pointer">
-<<<<<<< HEAD
                     <input type="file" accept=".pdf" onChange={handleFileChange} className="hidden" id="pdf-upload" />
                     <label htmlFor="pdf-upload" className="cursor-pointer">
                       <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
                       <p className="text-gray-600">Click to upload PDF or drag and drop</p>
                       <p className="text-sm text-white/80 mt-1">PDF up to 10MB</p>
-=======
-                    <input
-                      type="file"
-                      accept=".pdf"
-                      onChange={handleFileChange}
-                      className="hidden"
-                      id="pdf-upload"
-                    />
-                    <label htmlFor="pdf-upload" className="cursor-pointer">
-                      <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                      <p className="text-gray-600">
-                        Click to upload PDF or drag and drop
-                      </p>
-                      <p className="text-sm text-gray-500 mt-1">PDF up to 10MB</p>
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
                     </label>
                   </div>
                 )}
@@ -244,23 +178,13 @@ const NoteSummarizer = ({ user }) => {
 
               {/* Text Input */}
               <div className="mb-4">
-<<<<<<< HEAD
                 <label className="block text-sm font-medium text-gray-700 mb-2">Paste Text</label>
-=======
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Paste Text
-                </label>
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
                 <textarea
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   disabled={!!file}
                   className="input-field min-h-[300px] font-mono text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
-<<<<<<< HEAD
                   placeholder={file ? "PDF uploaded. Click 'Generate Summary' to proceed." : "Paste your notes here..."}
-=======
-                  placeholder={file ? "PDF uploaded. Click 'Generate Summary' to proceed." : "Paste your notes here... (lectures, textbook chapters, study material, etc.)"}
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
                 />
                 {!file && (
                   <div className="mt-2 flex items-center justify-between text-sm text-gray-500">

@@ -2,11 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
 import { getProgress } from '../api/services';
-<<<<<<< HEAD
 import { Target, Award, Calendar, CheckCircle, ArrowLeft, BookOpen, Brain } from 'lucide-react';
-=======
-import { Target, Award, Calendar, CheckCircle, ArrowLeft, BookOpen, Brain, TrendingUp } from 'lucide-react';
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
 
 const Progress = ({ user }) => {
   const navigate = useNavigate();
@@ -31,13 +27,10 @@ const Progress = ({ user }) => {
     }
   }, [user?.uid]);
 
-<<<<<<< HEAD
   useEffect(() => {
     fetchProgress();
   }, [fetchProgress]);
 
-=======
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
   if (loading) {
     return (
       <div className="min-h-screen py-8 px-4 flex items-center justify-center">
@@ -167,11 +160,7 @@ const Progress = ({ user }) => {
               <div>
                 <p className="text-gray-500 text-sm mb-1">Completion Rate</p>
                 <p className="text-3xl font-bold text-indigo-600">{studyPlanProgress.completionRate}%</p>
-<<<<<<< HEAD
                 <p className="text-xs text-gray-400 mt-1">
-=======
-                <p className="text-xs text-gray-500 mt-1">
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
                   {studyPlanProgress.completedTopics} of {studyPlanProgress.totalTopics} topics
                 </p>
               </div>
@@ -184,11 +173,7 @@ const Progress = ({ user }) => {
               <div>
                 <p className="text-gray-500 text-sm mb-1">Topics Completed</p>
                 <p className="text-3xl font-bold text-green-600">{studyPlanProgress.completedTopics}</p>
-<<<<<<< HEAD
                 <p className="text-xs text-gray-400 mt-1">
-=======
-                <p className="text-xs text-gray-500 mt-1">
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
                   {studyPlanProgress.totalTopics} total topics
                 </p>
               </div>
@@ -203,11 +188,7 @@ const Progress = ({ user }) => {
                 <p className="text-3xl font-bold text-orange-600">
                   {progressData?.user?.streak || 0}
                 </p>
-<<<<<<< HEAD
                 <p className="text-xs text-gray-400 mt-1">days in a row</p>
-=======
-                <p className="text-xs text-gray-500 mt-1">days in a row</p>
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
               </div>
               <Calendar className="w-12 h-12 text-orange-600" />
             </div>
@@ -220,11 +201,7 @@ const Progress = ({ user }) => {
                 <p className="text-3xl font-bold text-purple-600">
                   {progressData?.user?.total_points || 0}
                 </p>
-<<<<<<< HEAD
                 <p className="text-xs text-gray-400 mt-1">earned so far</p>
-=======
-                <p className="text-xs text-gray-500 mt-1">earned so far</p>
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
               </div>
               <Award className="w-12 h-12 text-purple-600" />
             </div>
@@ -250,20 +227,12 @@ const Progress = ({ user }) => {
                 <div className="bg-indigo-50 p-4 rounded-lg text-center">
                   <p className="text-2xl font-bold text-indigo-600">{studyPlanProgress.completedDays}</p>
                   <p className="text-sm text-gray-600">Days Completed</p>
-<<<<<<< HEAD
                   <p className="text-xs text-gray-400 mt-1">of {studyPlanProgress.totalDays} total</p>
-=======
-                  <p className="text-xs text-gray-500 mt-1">of {studyPlanProgress.totalDays} total</p>
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
                 </div>
                 <div className="bg-green-50 p-4 rounded-lg text-center">
                   <p className="text-2xl font-bold text-green-600">{studyPlanProgress.completedTopics}</p>
                   <p className="text-sm text-gray-600">Topics Completed</p>
-<<<<<<< HEAD
                   <p className="text-xs text-gray-400 mt-1">of {studyPlanProgress.totalTopics} total</p>
-=======
-                  <p className="text-xs text-gray-500 mt-1">of {studyPlanProgress.totalTopics} total</p>
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
                 </div>
               </div>
             </div>
@@ -343,20 +312,9 @@ const Progress = ({ user }) => {
                 });
                 
                 const planCompletedTopics = plan.completed_topics?.length || 0;
-<<<<<<< HEAD
                 const planProgress = planTotalTopics > 0 
                   ? Math.round((planCompletedTopics / planTotalTopics) * 100) 
                   : 0;
-=======
-                const planTotalDays = schedule.length;
-                const planCompletedDays = plan.completed_days?.length || 0;
-                const planProgress = planTotalTopics > 0 
-                  ? Math.round((planCompletedTopics / planTotalTopics) * 100) 
-                  : 0;
-                const daysProgress = planTotalDays > 0 
-                  ? Math.round((planCompletedDays / planTotalDays) * 100) 
-                  : 0;
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
 
                 return (
                   <div key={index} className="border border-gray-200 rounded-lg p-4 hover:border-indigo-300 transition-all">

@@ -5,7 +5,7 @@ import math
 from collections import Counter
 from textwrap import dedent
 
-from google import genai
+import google.generativeai as genai
 from google.genai import types as genai_types
 import torch
 from dotenv import load_dotenv
@@ -29,13 +29,10 @@ class AIModels:
         self.use_groq = False
         self.groq_client = None
         self.ready = False
-<<<<<<< HEAD
         self.summarizer = None
         self.qa_model = None
         self.explainer = None
         self.last_ai_error = None
-=======
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
 
         self._init_gemini()
         self._init_groq()
@@ -64,7 +61,6 @@ class AIModels:
                 print("[WARNING] GEMINI_API_KEY not found, defaulting to local transformer models.")
                 return
 
-<<<<<<< HEAD
             # Validate key looks reasonable (non-empty, starts with expected prefix)
             if len(api_key) < 10:
                 print("[WARNING] GEMINI_API_KEY looks invalid (too short).")
@@ -84,75 +80,6 @@ class AIModels:
             self.use_gemini = True
             print(f"[SUCCESS] Google Gemini API configured successfully (using {self.gemini_model_name}).")
 
-=======
-            genai.configure(api_key=api_key)
-            
-            # First, try to list available models
-            try:
-                models = genai.list_models()
-                available_models = []
-                preferred_models = [
-                    'gemini-2.5-flash',           # Fast and efficient
-                    'gemini-flash-latest',        # Latest flash version
-                    'gemini-2.5-pro',             # More capable
-                    'gemini-pro-latest',          # Latest pro version
-                ]
-                
-                for model in models:
-                    if 'generateContent' in model.supported_generation_methods:
-                        model_name = model.name.replace('models/', '')
-                        available_models.append(model_name)
-                
-                if available_models:
-                    # Try preferred models first
-                    for preferred in preferred_models:
-                        if preferred in available_models:
-                            model_name = preferred
-                            self.gemini_model = genai.GenerativeModel(model_name)
-                            print(f"[SUCCESS] Google Gemini API configured successfully (using {model_name}).")
-                            self.use_gemini = True
-                            return
-                    
-                    # If preferred not found, use first available
-                    model_name = available_models[0]
-                    self.gemini_model = genai.GenerativeModel(model_name)
-                    print(f"✅ Google Gemini API configured successfully (using {model_name}).")
-                    self.use_gemini = True
-                    return
-                else:
-                    print("[WARNING] No models with generateContent found, trying common names...")
-            except Exception as list_error:
-                # If listing fails (e.g., quota), try common names directly
-                print(f"[WARNING] Could not list models: {str(list_error)[:100]}...")
-                print("   [INFO] Trying common model names directly...")
-            
-            # Fallback: Try newer model names
-            model_names = [
-                'gemini-2.5-flash',      # Fast and efficient
-                'gemini-flash-latest',   # Latest flash
-                'gemini-2.5-pro',        # More capable
-                'gemini-pro-latest',     # Latest pro
-            ]
-            
-            self.gemini_model = None
-            for model_name in model_names:
-                try:
-                    self.gemini_model = genai.GenerativeModel(model_name)
-                    # Test if it works with a simple request
-                    test_response = self.gemini_model.generate_content("test")
-                    if test_response and hasattr(test_response, 'text'):
-                        print(f"✅ Google Gemini API configured successfully (using {model_name}).")
-                        self.use_gemini = True
-                        return
-                except Exception as e:
-                    continue
-            
-            # If all models failed
-            print("[WARNING] All Gemini models failed to initialize, using local models.")
-            print("[INFO] Make sure Gemini API is enabled in Google Cloud Console:")
-            print("   https://console.cloud.google.com/apis/library/generativelanguage.googleapis.com")
-            self.use_gemini = False
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
         except Exception as e:
             print(f"[ERROR] Failed to initialize Gemini: {e}")
             self.use_gemini = False
@@ -217,7 +144,6 @@ class AIModels:
         return None
 
     def _init_local_models(self):
-<<<<<<< HEAD
 
         """Load local transformer pipelines as fallbacks.
         Each model is loaded independently so one failure doesn't block others.
@@ -227,18 +153,12 @@ class AIModels:
 
         # Summarizer
         try:
-=======
-        """Load local transformer pipelines as fallbacks."""
-        try:
-            print("[INFO] Loading local transformer models...")
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
             self.summarizer = pipeline(
                 "summarization",
                 model="facebook/bart-large-cnn",
                 device=self.device
             )
             print("[SUCCESS] Summarization model loaded.")
-<<<<<<< HEAD
             any_loaded = True
         except Exception as e:
             print(f"[WARNING] Summarization model failed to load: {e}")
@@ -277,28 +197,6 @@ class AIModels:
             print("[WARNING] No local models could be loaded. Only Gemini will be used.")
             # Still mark ready=True so the app doesn't block — Gemini handles most requests
             self.ready = True
-=======
-
-            self.qa_model = pipeline(
-                "question-answering",
-                model="deepset/roberta-base-squad2",
-                device=self.device
-            )
-            print("[SUCCESS] Q&A model loaded.")
-
-            self.explainer = pipeline(
-                "text2text-generation",
-                model="google/flan-t5-base",
-                device=self.device
-            )
-            print("[SUCCESS] Local explanation model loaded.")
-
-            self.ready = True
-            print("[SUCCESS] AI models ready.")
-        except Exception as e:
-            print(f"[ERROR] Error loading local models: {e}")
-            self.ready = False
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
 
     def is_ready(self):
         return self.ready
@@ -311,20 +209,11 @@ class AIModels:
                 return "Please provide at least 50 characters of content to summarize."
 
             original_length = len(text)
-<<<<<<< HEAD
-=======
-            # Calculate target summary length (aim for 30-40% of original)
-            target_length = max(min_length, min(max_length, int(original_length * 0.35)))
-            target_min = max(min_length, int(target_length * 0.6))
-
-            summary_text = None
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
 
             # ── 1. Try AI (Gemini first, then Groq) ──────────────────────────
             if self.use_gemini or self.use_groq:
                 print(f"[Summarize] Calling AI for {original_length}-char text")
                 prompt = dedent(f"""
-<<<<<<< HEAD
                 You are an expert academic summarizer. Read the text below and write a concise summary.
 
                 Rules:
@@ -347,31 +236,9 @@ class AIModels:
                 \"\"\"
                 {text[:4000]}
                 \"\"\"
-=======
-                You are an expert academic summarizer. Your task is to CONDENSE the following text into a much shorter summary.
-                
-                CRITICAL REQUIREMENTS:
-                1. The summary MUST be significantly shorter than the original (aim for 30-40% of original length)
-                2. Extract ONLY the most essential information - main topic, key facts, core message
-                3. Remove all examples, details, and redundant information
-                4. Do NOT paraphrase or reword - CONDENSE and EXTRACT key information
-                5. If the original is {original_length} characters, your summary should be around {target_length} characters
-                
-                Respond with valid JSON:
-                {{
-                  "summary": "A very concise 2-3 sentence summary (around {target_length} characters). Focus on WHAT happened or WHAT the main point is, not rewording sentences.",
-                  "key_points": ["Most important point 1", "Most important point 2", "Most important point 3"]
-                }}
-
-                REMEMBER: Your goal is to REDUCE the text length by 60-70%. Extract the essence, don't rephrase everything.
-
-                Content to summarize:
-                \"\"\"{text[:4000]}\"\"\"
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
                 """)
                 response = self._call_ai(prompt, max_output_tokens=1024)
 
-<<<<<<< HEAD
                 if response and len(response.strip()) > 50:
                     print(f"[Summarize] AI success ({len(response)} chars)")
                     r = response.strip()
@@ -400,23 +267,6 @@ class AIModels:
             # Add a clear notice so the user knows this is a basic fallback
             notice = "⚠️ AI summarizer is temporarily unavailable (API quota). Showing key sentences from your text:\n\n"
             return notice + extractive
-=======
-            if not summary_text:
-                summary_text = self._local_summarize(text, target_length, target_min)
-
-            # Enforce that summary is actually shorter
-            formatted = self._format_summary_output(summary_text, text)
-            
-            # If summary is still too long, force re-summarization
-            if len(formatted) > original_length * 0.6:
-                print(f"[WARNING] Summary too long ({len(formatted)} vs {original_length}), forcing re-summarization")
-                # Try more aggressive local summarization
-                forced_summary = self._local_summarize(text, int(target_length * 0.7), int(target_min * 0.7))
-                if forced_summary and len(forced_summary) < len(formatted):
-                    formatted = self._format_summary_output(forced_summary, text)
-            
-            return formatted
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
 
         except Exception as e:
             print(f"[Summarize] Error: {e}")
@@ -991,15 +841,11 @@ class AIModels:
         return None
 
     def _local_summarize(self, text, max_length=150, min_length=50):
-<<<<<<< HEAD
         """Summarize text. Uses local transformer if available, else extractive summarization."""
         if not self.summarizer:
             # No transformer loaded — use extractive summarization (TF-based sentence scoring)
             return self._extractive_summarize(text, max_length)
 
-=======
-        """Summarize text using local transformer model with improved parameters."""
->>>>>>> 4d821c77f545d61840736288e59b9a5151305359
         # Calculate better max_length based on input text length (aim for 30-40% compression)
         text_length = len(text.split())
         text_char_length = len(text)
