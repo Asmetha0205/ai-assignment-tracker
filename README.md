@@ -6,7 +6,7 @@ This project is a smart study assistant designed to help students manage assignm
 
 It combines AI-based features with progress tracking and interactive tools to make studying more structured and less overwhelming.
 
-### What it does
+## What it does
 
 * Generates personalized study plans based on syllabus and deadlines
 * Summarizes long notes into short, easy-to-understand content
