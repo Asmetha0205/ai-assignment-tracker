@@ -1,53 +1,183 @@
-# AI Assignment & Exam Preparation Tracker
+# AI-Powered Study Planner & Exam Preparation System
 
 ## Overview
 
-This project is a smart study assistant designed to help students manage assignments and prepare for exams more effectively.
+AI-Powered Study Planner & Exam Preparation System is a full-stack educational platform designed to help students organize their studies, improve productivity, and prepare effectively for examinations.
 
-It combines AI-based features with progress tracking and interactive tools to make studying more structured and less overwhelming.
+The platform combines Artificial Intelligence, cloud services, and productivity tools to automate study planning, generate learning resources, provide academic assistance, and track student progress through a personalized learning experience.
 
-## What it does
+---
 
-* Generates personalized study plans based on syllabus and deadlines
-* Summarizes long notes into short, easy-to-understand content
-* Creates quizzes automatically for self-assessment
-* Generates flashcards for quick revision
-* Tracks progress and performance over time
-* Includes leaderboard, streaks, and points to keep users engaged
-* Shows exam countdowns and upcoming deadlines
-* Provides an AI assistant for explanations and doubt solving
+## Key Features
 
-## My Contribution
+- AI-generated personalized study schedules
+- Intelligent notes summarization
+- Automatic quiz generation
+- Interactive flashcard creation
+- AI-powered academic assistant
+- Exam countdown and deadline tracking
+- Progress tracking and performance analytics
+- Leaderboard, streaks, and rewards system
+- Pomodoro productivity timer
+- Secure authentication and cloud data storage
 
-This was a team project, and I contributed mainly to the AI-related modules and their integration within the application. I was involved in features such as study plan generation, summarization, quiz and flashcard generation, and the AI assistant, while also collaborating with the team on improving the overall functionality and user experience.
+---
 
-## Tech Stack
+## Technology Stack
 
-Frontend:
-- React
+### Frontend
+
+- React.js
 - Tailwind CSS
 
-Backend:
-- Flask
+### Backend
+
+- Flask (Python)
 - REST APIs
 
-AI / ML:
-- Gemini API
+### Database & Authentication
+
+- Firebase Firestore
+- Firebase Authentication
+
+### AI & Machine Learning
+
+- Google Gemini API
 - Groq API
 - BART
 - RoBERTa
 
-Database & Auth:
-- Firebase Authentication
-- Firestore
+### Additional Tools
 
-## Features
+- Git
+- GitHub
+- PDF Processing
+- DOCX Processing
 
-* AI-generated study plans
-* Smart summaries
-* Auto quiz generator
-* Flashcard generator
-* AI assistant
-* Exam countdown and deadline tracker
-* Progress tracker
-* Leaderboard and rewards system
+---
+
+## Core Modules
+
+### Study Planner
+
+Generates personalized study schedules based on syllabus coverage, learning goals, and exam deadlines.
+
+### Notes Summarizer
+
+Converts lengthy study material into concise and easy-to-understand summaries.
+
+### Quiz Generator
+
+Automatically creates quizzes from study content to support self-assessment and revision.
+
+### Flashcard Generator
+
+Produces revision flashcards for active recall and efficient learning.
+
+### AI Academic Assistant
+
+Provides explanations, answers academic queries, and assists students with learning concepts.
+
+### Progress Tracker
+
+Tracks study progress, completion rates, and learning consistency through visual analytics.
+
+### Pomodoro Productivity System
+
+Helps students maintain focus through structured study sessions and productivity tracking.
+
+### Gamification System
+
+Includes leaderboards, streak tracking, rewards, and engagement features to encourage consistent study habits.
+
+### Exam Countdown & Reminders
+
+Displays upcoming exams and important deadlines to help students stay organized.
+
+---
+
+## My Contribution
+
+This was a collaborative team project. My primary contributions focused on the development and integration of AI-powered features, including:
+
+- Study schedule generation
+- Notes summarization
+- Quiz generation
+- Flashcard generation
+- AI academic assistant
+- AI model and API integration
+
+I also collaborated on feature enhancement, testing, and improving the overall user experience.
+
+---
+
+## Project Objectives
+
+- Simplify exam preparation for students
+- Reduce manual effort in study planning
+- Improve learning efficiency through AI
+- Encourage consistent study habits using productivity tools
+- Provide a personalized and engaging learning experience
+
+---
+
+## Future Enhancements
+
+- Mobile application support
+- Adaptive learning recommendations
+- Multi-language support
+- Advanced analytics dashboard
+- Collaborative study groups
+
+---
+
+## Screenshots
+
+Add screenshots of:
+
+- Dashboard
+- Study Planner
+- Quiz Generator
+- Flashcards
+- Pomodoro Timer
+- Progress Analytics
+
+---
+
+## Installation & Setup
+
+### Backend Setup
+
+```bash
+cd backend
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+python app.py
+```
+
+### Frontend Setup
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+### Access Application
+
+```text
+Frontend: http://localhost:3000
+Backend: http://localhost:5000
+```
+
+---
+
+## Project Highlights
+
+- Full-Stack Development
+- Artificial Intelligence Integration
+- Firebase Cloud Services
+- Productivity and Gamification Features
+- Real-World Educational Use Case
+- Team-Based Collaborative Development
