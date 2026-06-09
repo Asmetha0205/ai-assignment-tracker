@@ -136,8 +136,15 @@ I also collaborated on feature enhancement, testing, and improving the overall u
 Add screenshots of:
 
 - Dashboard
+  <img width="919" height="455" alt="image" src="https://github.com/user-attachments/assets/273c6609-2064-4ddc-aef6-92b3c60a1f1b" />
+<img width="905" height="366" alt="image" src="https://github.com/user-attachments/assets/a12f2bc4-9c95-401e-a0a5-9a1388f35648" />
+
 - Study Planner
+  <img width="756" height="458" alt="image" src="https://github.com/user-attachments/assets/42a9aaf4-1229-4624-bb7c-0e65882e55d1" />
+
 - Quiz Generator
+  <img width="764" height="452" alt="image" src="https://github.com/user-attachments/assets/f7ec1e89-d0c3-47e8-acc7-0c8b7c3e637a" />
+
 - Flashcards
 - Pomodoro Timer
 - Progress Analytics
