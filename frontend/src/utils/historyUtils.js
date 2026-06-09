@@ -1,4 +1,5 @@
 import axios from '../api/axios';
+import { getLocalDateKey } from './pomodoroStorage';
 
 export const saveToHistory = async (feature, userId, title, data) => {
   if (!userId) return null;
@@ -7,7 +8,8 @@ export const saveToHistory = async (feature, userId, title, data) => {
       user_id: userId,
       feature,
       title,
-      data
+      data,
+      date_key: getLocalDateKey()
     });
     if (res.data.success) {
       return res.data.item;
@@ -26,7 +28,8 @@ export const updateHistory = async (feature, userId, id, newData, title = '') =>
       feature,
       id,
       title, // If title isn't needed, the backend will just not update it, but we can pass it if we want.
-      data: newData
+      data: newData,
+      date_key: getLocalDateKey()
     });
     if (res.data.success) {
       return res.data.item;

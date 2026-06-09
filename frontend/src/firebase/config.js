@@ -4,13 +4,13 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 // Firebase configuration example
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+const firebaseConfig = { 
+  apiKey: "AIzaSyBPtVuv_uQmbmvk1whiFvczoJyJLojhRWo", 
+  authDomain: "ai-study-planner-ad07a.firebaseapp.com", 
+  projectId: "ai-study-planner-ad07a", 
+  storageBucket: "ai-study-planner-ad07a.firebasestorage.app", 
+  messagingSenderId: "957753495405", 
+  appId: "1:957753495405:web:cff075ae35d3c974e89464" 
 };
 
 // Initialize Firebase

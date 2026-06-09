@@ -1,4 +1,5 @@
 import axios from './axios';
+import { getLocalDateKey } from '../utils/pomodoroStorage';
 
 // Study Plan Services
 export const generateStudyPlan = async (data) => {
@@ -67,6 +68,7 @@ export const recordUserActivity = async (user) => {
     user_id: user.uid,
     name: user.displayName || user.email || 'Learner',
     email: user.email || '',
+    date_key: getLocalDateKey(),
   });
   return response.data;
 };
@@ -117,7 +119,15 @@ export const generateQuiz = async (formData) => {
 };
 
 export const submitQuizResult = async (data) => {
-  const response = await axios.post('/api/quiz/submit', data);
+  const response = await axios.post('/api/quiz/submit', {
+    ...data,
+    date_key: getLocalDateKey(),
+  });
+  return response.data;
+};
+
+export const getQuizHistory = async (userId) => {
+  const response = await axios.get(`/api/quiz/history/${userId}`);
   return response.data;
 };
 

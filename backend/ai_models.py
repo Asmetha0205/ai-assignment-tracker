@@ -274,49 +274,212 @@ class AIModels:
 
 
     def generate_study_plan(self, syllabus_text, days_available=30):
-        """Generate a structured study plan from syllabus."""
+        """Generate a structured study plan with time-wise schedules from syllabus."""
         try:
             cleaned_text = syllabus_text.strip()
             if len(cleaned_text) < 50:
-                return {
-                    'error': 'Please provide a more detailed syllabus to generate a plan.'
-                }
+                return {'error': 'Please provide a more detailed syllabus to generate a plan.'}
 
-            if self.use_gemini or self.use_groq:
+            days_available = max(1, int(days_available or 30))
+
+            # ── PHASE 1: Extract topics from syllabus ─────────────────────
+            topics = self._extract_topics_with_ai(cleaned_text)
+            if not topics or len(topics) < 3:
+                topics = self._extract_topics(cleaned_text)
+            if not topics:
+                topics = [f"Topic {i+1}" for i in range(min(days_available * 2, 20))]
+
+            print(f"[StudyPlan] Extracted {len(topics)} topics for {days_available} days")
+
+            # ── PHASE 2: Build schedule from topics ───────────────────────
+            # For short plans (≤7 days) try AI for full JSON; for longer plans use
+            # the reliable fallback builder which always produces correct structure.
+            if days_available <= 7 and (self.use_gemini or self.use_groq):
+                topics_list = "\n".join(f"- {t}" for t in topics)
                 prompt = dedent(f"""
-                You are an expert academic planner. Create an actionable study plan based on the syllabus
-                below. Spread topics across {days_available} days. Respond with valid JSON:
+                Create a {days_available}-day study schedule for these topics.
+                Output ONLY valid JSON, no markdown, no explanation.
+
+                Topics:
+                {topics_list}
+
+                JSON format:
                 {{
-                  "overview": "One paragraph overview",
+                  "overview": "Brief overview sentence",
                   "total_days": {days_available},
-                  "total_topics": <number>,
+                  "total_topics": {len(topics)},
                   "schedule": [
                     {{
                       "day": 1,
-                      "focus": "Main focus",
-                      "topics": ["Topic 1", "Topic 2"],
-                      "duration": "2-3 hours",
-                      "tips": "Helpful study tip"
+                      "focus": "Topic name",
+                      "tips": "One study tip",
+                      "time_slots": [
+                        {{"time": "8:00-10:00 AM", "activity": "Topic name", "type": "study"}},
+                        {{"time": "10:00-10:30 AM", "activity": "Break", "type": "break"}},
+                        {{"time": "10:30 AM-12:00 PM", "activity": "Topic name", "type": "study"}},
+                        {{"time": "12:00-1:00 PM", "activity": "Lunch Break", "type": "break"}},
+                        {{"time": "1:00-3:00 PM", "activity": "Topic name", "type": "study"}},
+                        {{"time": "3:00-3:30 PM", "activity": "Break", "type": "break"}},
+                        {{"time": "3:30-5:30 PM", "activity": "Topic name", "type": "study"}}
+                      ]
                     }}
                   ]
                 }}
-
-                Syllabus:
-                \"\"\"{cleaned_text[:4000]}\"\"\"
                 """)
-                response = self._call_ai(prompt, max_output_tokens=2048)
+                response = self._call_ai(prompt, max_output_tokens=4096)
                 plan = self._plan_from_response(response, days_available)
-                if plan:
+                if plan and plan.get('schedule') and len(plan['schedule']) >= days_available:
                     return plan
 
-            return self._fallback_study_plan(cleaned_text, days_available)
+            # ── Always-reliable builder ───────────────────────────────────
+            return self._build_plan_from_topics(topics, days_available, cleaned_text)
 
         except Exception as e:
             print(f"Error generating study plan: {e}")
-            return {
-                'error': 'Could not generate study plan',
-                'message': str(e)
-            }
+            import traceback; traceback.print_exc()
+            return {'error': 'Could not generate study plan', 'message': str(e)}
+
+    def _extract_topics_with_ai(self, text):
+        """Use AI to extract a clean list of study topics from syllabus text."""
+        if not (self.use_gemini or self.use_groq):
+            return []
+        try:
+            prompt = dedent(f"""
+            Extract all study topics from the syllabus below.
+            Return ONLY a JSON array of topic name strings. No markdown, no explanation.
+            Each topic should be 2-8 words. Include chapter names, unit names, concept names.
+
+            Example output: ["Introduction to Python", "Data Types", "Control Flow", "Functions"]
+
+            Syllabus:
+            {text[:3000]}
+
+            JSON array:""")
+
+            # Use lower token limit — just need a list
+            response = self._call_ai(prompt, max_output_tokens=1024)
+            if not response:
+                return []
+
+            parsed = self._extract_json_array(response)
+            if parsed and isinstance(parsed, list):
+                topics = [str(t).strip() for t in parsed if t and len(str(t).strip()) > 2]
+                topics = [t for t in topics if len(t.split()) <= 12]
+                print(f"[StudyPlan] AI extracted {len(topics)} topics")
+                return topics[:60]
+        except Exception as e:
+            print(f"[StudyPlan] AI topic extraction failed: {e}")
+        return []
+
+    def _build_plan_from_topics(self, topics, days_available, syllabus_text=''):
+        """Build a complete, reliable study plan from a list of topics."""
+        total_topics = len(topics)
+
+        # Generate overview
+        overview = f"A {days_available}-day study plan covering {total_topics} topics. " \
+                   f"Each day includes focused study sessions with regular breaks for optimal retention."
+
+        # Standard daily time slots template
+        DAILY_SLOTS = [
+            ('8:00-10:00 AM',    'study'),
+            ('10:00-10:30 AM',   'break'),
+            ('10:30 AM-12:00 PM','study'),
+            ('12:00-1:00 PM',    'break'),
+            ('1:00-3:00 PM',     'study'),
+            ('3:00-3:30 PM',     'break'),
+            ('3:30-5:30 PM',     'study'),
+            ('5:30-6:00 PM',     'break'),
+            ('6:00-8:00 PM',     'study'),
+        ]
+        BREAK_ACTIVITIES = {
+            '10:00-10:30 AM':   'Short Break — stretch & hydrate',
+            '12:00-1:00 PM':    'Lunch Break',
+            '3:00-3:30 PM':     'Short Break — rest your eyes',
+            '5:30-6:00 PM':     'Evening Break',
+        }
+        STUDY_TIPS = [
+            'Use active recall — close your notes and try to recall key points.',
+            'Make a mind map of today\'s topics to see connections.',
+            'Teach the concept to an imaginary student to test your understanding.',
+            'Write 3 key takeaways at the end of each session.',
+            'Use the Pomodoro technique: 25 min focus, 5 min break.',
+            'Review yesterday\'s topics for 10 minutes before starting today.',
+            'Create flashcards for new terms and definitions.',
+            'Practice with past exam questions if available.',
+            'Summarize each topic in one sentence after studying it.',
+            'Stay hydrated and take short walks during breaks.',
+        ]
+
+        schedule = []
+        topic_idx = 0
+
+        for day_num in range(1, days_available + 1):
+            # How many topics for this day
+            remaining_topics = total_topics - topic_idx
+            remaining_days = days_available - day_num + 1
+            topics_today = max(1, round(remaining_topics / remaining_days)) if remaining_topics > 0 else 0
+
+            day_topics = topics[topic_idx: topic_idx + topics_today] if topics_today > 0 else []
+            topic_idx += len(day_topics)
+
+            # If no new topics, use revision
+            if not day_topics:
+                day_topics = ['Revision & Practice']
+
+            # Build time slots — assign topics to study slots
+            study_slot_indices = [i for i, (_, t) in enumerate(DAILY_SLOTS) if t == 'study']
+            time_slots = []
+            topic_slot_idx = 0
+
+            for slot_time, slot_type in DAILY_SLOTS:
+                if slot_type == 'break':
+                    time_slots.append({
+                        'time': slot_time,
+                        'activity': BREAK_ACTIVITIES.get(slot_time, 'Break'),
+                        'type': 'break'
+                    })
+                else:
+                    # Assign next topic, or use revision if we've run out
+                    if topic_slot_idx < len(day_topics):
+                        activity = day_topics[topic_slot_idx]
+                        topic_slot_idx += 1
+                    else:
+                        # Reuse topics for extra study slots or use revision
+                        if day_topics:
+                            activity = f"Deep dive: {day_topics[topic_slot_idx % len(day_topics)]}"
+                            topic_slot_idx += 1
+                        else:
+                            activity = 'Revision & Practice'
+                    time_slots.append({
+                        'time': slot_time,
+                        'activity': activity,
+                        'type': 'study'
+                    })
+
+            focus = day_topics[0] if len(day_topics) == 1 else f"{day_topics[0]} + {len(day_topics)-1} more"
+            tip = STUDY_TIPS[(day_num - 1) % len(STUDY_TIPS)]
+
+            schedule.append({
+                'day': day_num,
+                'focus': focus,
+                'tips': tip,
+                'time_slots': time_slots,
+            })
+
+        # Count total study slots
+        total_study_slots = sum(
+            1 for day in schedule
+            for slot in day['time_slots']
+            if slot['type'] == 'study'
+        )
+
+        return {
+            'overview': overview,
+            'total_days': days_available,
+            'total_topics': total_topics,
+            'total_study_slots': total_study_slots,
+            'schedule': schedule,
+        }
 
     def explain_concept(self, concept):
         """Explain a concept using Gemini or a local model."""
@@ -789,24 +952,28 @@ class AIModels:
         if data and isinstance(data, dict):
             schedule = data.get('schedule', [])
             if isinstance(schedule, list) and schedule:
-                # Clean up topics in each day - remove long paragraphs, keep only short topic names
+                # Process time_slots in each day
                 for day_item in schedule:
-                    if 'topics' in day_item and isinstance(day_item['topics'], list):
-                        cleaned_topics = []
-                        for topic in day_item['topics']:
-                            if isinstance(topic, str):
-                                # Clean and validate topic
-                                cleaned = re.sub(r'\s+', ' ', topic).strip()
-                                # Remove if too long (likely a paragraph, not a topic name)
-                                if len(cleaned) > 60 or len(cleaned.split()) > 10:
-                                    continue
-                                # Remove common PDF artifacts
-                                cleaned = re.sub(r'\b(prashant|kirad|josh meter|youtube|video|watch)\b', '', cleaned, flags=re.IGNORECASE)
-                                cleaned = cleaned.strip()
-                                # Only keep if it looks like a topic name
-                                if cleaned and self._is_meaningful_topic(cleaned):
-                                    cleaned_topics.append(cleaned)
-                        day_item['topics'] = cleaned_topics[:8]  # Max 8 topics per day
+                    if 'time_slots' in day_item and isinstance(day_item['time_slots'], list):
+                        cleaned_slots = []
+                        for slot in day_item['time_slots']:
+                            if isinstance(slot, dict):
+                                # Clean activity/topic name
+                                activity = slot.get('activity', '')
+                                if isinstance(activity, str):
+                                    cleaned = re.sub(r'\s+', ' ', activity).strip()
+                                    # Remove if too long (likely a paragraph, not a topic name)
+                                    if len(cleaned) > 80 or len(cleaned.split()) > 12:
+                                        # Truncate to first 6 words
+                                        words = cleaned.split()[:6]
+                                        cleaned = ' '.join(words)
+                                    # Remove common PDF artifacts
+                                    cleaned = re.sub(r'\b(prashant|kirad|josh meter|youtube|video|watch)\b', '', cleaned, flags=re.IGNORECASE)
+                                    cleaned = cleaned.strip()
+                                    if cleaned:
+                                        slot['activity'] = cleaned
+                                        cleaned_slots.append(slot)
+                        day_item['time_slots'] = cleaned_slots
                     
                     # Clean focus field - keep it short
                     if 'focus' in day_item and isinstance(day_item['focus'], str):
@@ -816,10 +983,12 @@ class AIModels:
                             day_item['focus'] = ' '.join(words[:6]) if len(words) > 6 else focus[:50]
                 
                 data.setdefault('total_days', days_available)
-                data.setdefault(
-                    'total_topics',
-                    sum(len(item.get('topics', [])) for item in schedule)
-                )
+                # Count total topics from time_slots where type is 'study'
+                total_study_slots = 0
+                for item in schedule:
+                    if 'time_slots' in item and isinstance(item['time_slots'], list):
+                        total_study_slots += sum(1 for slot in item['time_slots'] if slot.get('type') == 'study')
+                data.setdefault('total_topics', total_study_slots)
                 return data
         return None
 
@@ -917,7 +1086,6 @@ class AIModels:
             'overview': self._local_summarize(syllabus_text, 180, 60),
             'total_days': days_available,
             'total_topics': total_topics,
-            'daily_topics': max(1, math.ceil(total_topics / days_available)),
             'schedule': []
         }
 
@@ -931,24 +1099,117 @@ class AIModels:
             day_topics = topics[topic_index: topic_index + allocation] if allocation else []
             topic_index += len(day_topics)
 
+            # Generate time-wise schedule for the day
+            time_slots = []
+            
             if not day_topics:
                 if day == 1:
-                    day_topics = ['High-level overview and goal setting']
-                    duration = '1-2 hours'
-                    tip = 'Skim the syllabus and highlight key themes for the coming weeks.'
+                    focus = 'High-level overview and goal setting'
+                    tip = 'Skim the content and highlight key themes for the coming weeks.'
+                    day_topics = ['Overview and goal setting']
                 else:
-                    day_topics = [f'Review and practice previous topics (Days 1-{day - 1})']
-                    duration = '1-2 hours'
+                    focus = f'Review and practice previous topics (Days 1-{day - 1})'
                     tip = 'Revise flashcards, attempt quizzes, and close any knowledge gaps.'
+                    day_topics = [focus]
             else:
-                duration = '2-3 hours'
+                focus = day_topics[0] if len(day_topics) == 1 else f'Study {len(day_topics)} topics'
                 tip = 'Focus on active recall and end the session with a short recap.'
+
+            # Create time slots (8 AM to 8 PM with breaks)
+            current_hour = 8
+            topic_idx = 0
+            
+            while current_hour < 20 and topic_idx < len(day_topics):
+                # Morning session (8-10 AM)
+                if current_hour == 8:
+                    time_slots.append({
+                        'time': '8:00-10:00 AM',
+                        'activity': day_topics[topic_idx] if topic_idx < len(day_topics) else 'Review previous topics',
+                        'type': 'study'
+                    })
+                    topic_idx += 1
+                    current_hour = 10
+                
+                # Break (10-10:30 AM)
+                elif current_hour == 10:
+                    time_slots.append({
+                        'time': '10:00-10:30 AM',
+                        'activity': 'Break',
+                        'type': 'break'
+                    })
+                    current_hour = 10.5
+                
+                # Late morning session (10:30 AM-12:00 PM)
+                elif current_hour == 10.5:
+                    time_slots.append({
+                        'time': '10:30 AM-12:00 PM',
+                        'activity': day_topics[topic_idx] if topic_idx < len(day_topics) else 'Practice problems',
+                        'type': 'study'
+                    })
+                    topic_idx += 1
+                    current_hour = 12
+                
+                # Lunch break (12:00-1:00 PM)
+                elif current_hour == 12:
+                    time_slots.append({
+                        'time': '12:00-1:00 PM',
+                        'activity': 'Lunch Break',
+                        'type': 'break'
+                    })
+                    current_hour = 13
+                
+                # Afternoon session 1 (1:00-3:00 PM)
+                elif current_hour == 13:
+                    time_slots.append({
+                        'time': '1:00-3:00 PM',
+                        'activity': day_topics[topic_idx] if topic_idx < len(day_topics) else 'Review notes',
+                        'type': 'study'
+                    })
+                    topic_idx += 1
+                    current_hour = 15
+                
+                # Break (3:00-3:30 PM)
+                elif current_hour == 15:
+                    time_slots.append({
+                        'time': '3:00-3:30 PM',
+                        'activity': 'Break',
+                        'type': 'break'
+                    })
+                    current_hour = 15.5
+                
+                # Afternoon session 2 (3:30-5:30 PM)
+                elif current_hour == 15.5:
+                    time_slots.append({
+                        'time': '3:30-5:30 PM',
+                        'activity': day_topics[topic_idx] if topic_idx < len(day_topics) else 'Practice exercises',
+                        'type': 'study'
+                    })
+                    topic_idx += 1
+                    current_hour = 17.5
+                
+                # Break (5:30-6:00 PM)
+                elif current_hour == 17.5:
+                    time_slots.append({
+                        'time': '5:30-6:00 PM',
+                        'activity': 'Break',
+                        'type': 'break'
+                    })
+                    current_hour = 18
+                
+                # Evening session (6:00-8:00 PM)
+                elif current_hour == 18:
+                    time_slots.append({
+                        'time': '6:00-8:00 PM',
+                        'activity': day_topics[topic_idx] if topic_idx < len(day_topics) else 'Revision and summary',
+                        'type': 'study'
+                    })
+                    topic_idx += 1
+                    current_hour = 20
 
             study_plan['schedule'].append({
                 'day': day,
-                'focus': day_topics[0] if day_topics else 'Review',
-                'topics': day_topics,
-                'duration': duration,
+                'time_slots': time_slots,
+                'focus': focus,
                 'tips': tip
             })
 
@@ -1279,12 +1540,9 @@ class AIModels:
 
     def _normalize_concept(self, text):
         cleaned = text.strip()
-        cleaned = re.sub(
-            r'^(explain|describe|define|what is|tell me about|give me|teach me|overview of)\s+',
-            '',
-            cleaned,
-            flags=re.IGNORECASE
-        )
+        cleaned = cleaned.rstrip(' ?.:-,')
+        pattern = r'^(?:can you|could you|please|would you)?\s*(?:explain|describe|define|tell me about|teach me|give me|overview of|what is|what is the concept of|what do you mean by)\s*(?:to me|me)?\s*(?:the concept of|concept of|about)?\s*(?:concept(?:s)?\s+(?:coming in|in|of|related to|about|from)\s+)?\s*'
+        cleaned = re.sub(pattern, '', cleaned, flags=re.IGNORECASE)
         cleaned = cleaned.strip(' ?.:-,')
         return cleaned if cleaned else text.strip()
 

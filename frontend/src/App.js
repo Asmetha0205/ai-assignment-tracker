@@ -3,13 +3,20 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Toaster } from 'react-hot-toast';
 import { auth } from './firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
-import { recordUserActivity } from './api/services';
+import axios from './api/axios';
+import { checkExamReminders } from './utils/examReminders';
+import { areNotificationsEnabled } from './utils/notifications';
+import {
+  initializeTimer,
+  subscribeToCompletion,
+} from './utils/pomodoroTimer';
+import { handlePomodoroCompletion } from './utils/pomodoroCompletion';
 
 // Pages
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
-import StudyPlan from './pages/StudyPlan';
+import Pomodoro from './pages/Pomodoro';
 import NoteSummarizer from './pages/NoteSummarizer';
 import AIAssistant from './pages/AIAssistant';
 import Progress from './pages/Progress';
@@ -17,6 +24,7 @@ import Leaderboard from './pages/Leaderboard';
 import QuizGenerator from './pages/QuizGenerator';
 import Flashcards from './pages/Flashcards';
 import ExamCountdown from './pages/ExamCountdown';
+import StudyPlanner from './pages/StudyPlanner';
 
 // Components
 import Navbar from './components/Navbar';
@@ -30,16 +38,40 @@ function App() {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
-
-      if (currentUser) {
-        recordUserActivity(currentUser).catch((error) => {
-          console.error('Failed to record user activity:', error);
-        });
-      }
     });
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!user?.uid) return undefined;
+
+    initializeTimer(user.uid);
+    const unsubComplete = subscribeToCompletion(() => {
+      handlePomodoroCompletion(user.uid, user);
+    });
+
+    return unsubComplete;
+  }, [user?.uid]);
+
+  useEffect(() => {
+    if (!user?.uid || !areNotificationsEnabled()) return undefined;
+
+    const runExamReminders = async () => {
+      try {
+        const res = await axios.get(`/api/exams/${user.uid}`);
+        if (res.data.success) {
+          checkExamReminders(res.data.exams || [], user.uid);
+        }
+      } catch (error) {
+        console.error('Exam reminder check failed:', error);
+      }
+    };
+
+    runExamReminders();
+    const interval = setInterval(runExamReminders, 60 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [user?.uid]);
 
   if (loading) {
     return <LoadingSpinner />;
@@ -66,9 +98,10 @@ function App() {
             element={user ? <Dashboard user={user} /> : <Navigate to="/login" />} 
           />
           <Route 
-            path="/study-plan" 
-            element={user ? <StudyPlan user={user} /> : <Navigate to="/login" />} 
+            path="/pomodoro" 
+            element={user ? <Pomodoro user={user} /> : <Navigate to="/login" />} 
           />
+          <Route path="/study-plan" element={user ? <StudyPlanner user={user} /> : <Navigate to="/login" />} />
           <Route 
             path="/summarizer" 
             element={user ? <NoteSummarizer user={user} /> : <Navigate to="/login" />} 

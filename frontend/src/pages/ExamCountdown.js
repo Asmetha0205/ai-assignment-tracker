@@ -4,6 +4,8 @@ import Card from '../components/Card';
 import toast from 'react-hot-toast';
 import { ArrowLeft, Plus, Trash2, CalendarDays, Clock, BookOpen, Pencil, Check, X, Lightbulb } from 'lucide-react';
 import axios from '../api/axios';
+import { checkExamReminders, EXAM_REMINDER_DAYS } from '../utils/examReminders';
+import NotificationBanner from '../components/NotificationBanner';
 
 const STUDY_TIPS = [
   "Don't cram! Spaced repetition is proven to increase memory retention by 40%.",
@@ -61,6 +63,12 @@ const ExamCountdown = ({ user }) => {
   useEffect(() => {
     loadExams();
   }, [user?.uid]);
+
+  useEffect(() => {
+    if (user?.uid && exams.length > 0) {
+      checkExamReminders(exams, user.uid);
+    }
+  }, [exams, user?.uid]);
 
   // Refresh countdowns every minute
   useEffect(() => {
@@ -161,6 +169,14 @@ const ExamCountdown = ({ user }) => {
             <Plus className="w-5 h-5" /><span>Add Exam</span>
           </button>
         </div>
+
+        <NotificationBanner />
+
+        <p className="text-white/70 text-sm mb-6 -mt-4">
+          With notifications enabled, you&apos;ll get alerts at{' '}
+          {EXAM_REMINDER_DAYS.map((d) => (d === 0 ? 'exam day' : `${d} day${d > 1 ? 's' : ''} before`)).join(', ')}{' '}
+          when you open the app. For alerts while the app is closed, a mobile app or PWA push setup is needed.
+        </p>
 
         {/* Add / Edit Form */}
         {showForm && (

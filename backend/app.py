@@ -6,6 +6,7 @@ import firebase_admin
 from firebase_admin import credentials, firestore, auth
 from ai_models import AIModels
 from pdf_processor import PDFProcessor
+from file_processor import FileProcessor
 import traceback
 from datetime import datetime, timedelta, timezone
 
@@ -26,7 +27,7 @@ except Exception as e:
     print(f"[WARNING] Firebase initialization failed: {e}")
     db = None
 
-def update_user_profile(user_id, name='', email='', points_delta=0, record_activity=False):
+def update_user_profile(user_id, name='', email='', points_delta=0, record_activity=False, date_key=None):
     """Ensure user exists, update streaks, and add points."""
     result = {
         'total_points': points_delta,
@@ -58,6 +59,7 @@ def update_user_profile(user_id, name='', email='', points_delta=0, record_activ
     streak = user_data.get('streak', 0)
     last_active = user_data.get('last_active_date')
     daily_bonus = 0
+    active_days = user_data.get('active_days', {})
 
     def to_date(value):
         if isinstance(value, datetime):
@@ -68,21 +70,29 @@ def update_user_profile(user_id, name='', email='', points_delta=0, record_activ
             return None
 
     today = datetime.now(timezone.utc).date()
+    today_str = date_key if date_key else today.isoformat()
+    try:
+        today_date = datetime.fromisoformat(today_str).date()
+    except Exception:
+        today_date = today
+        today_str = today.isoformat()
+
     last_active_date = to_date(last_active)
 
     if record_activity:
-        if last_active_date == today:
+        active_days[today_str] = active_days.get(today_str, 0) + 1
+        if last_active_date == today_date:
             pass
-        elif last_active_date == today - timedelta(days=1):
+        elif last_active_date == today_date - timedelta(days=1):
             streak = (streak or 0) + 1
             daily_bonus = 5
         else:
             streak = 1
             daily_bonus = 5
         total_points += daily_bonus
-        last_active_str = today.isoformat()
+        last_active_str = today_str
     else:
-        last_active_str = last_active_date.isoformat() if last_active_date else today.isoformat()
+        last_active_str = last_active_date.isoformat() if last_active_date else today_str
 
     user_ref.set({
         'name': name or user_data.get('name') or 'Learner',
@@ -93,6 +103,7 @@ def update_user_profile(user_id, name='', email='', points_delta=0, record_activ
         'completed_topics': user_data.get('completed_topics', 0),
         'total_topics': user_data.get('total_topics', 0),
         'completion_percentage': user_data.get('completion_percentage', 0),
+        'active_days': active_days,
         'updated_at': firestore.SERVER_TIMESTAMP
     }, merge=True)
 
@@ -166,6 +177,7 @@ def get_day_topics_from_plan(plan, day_number):
 # Initialize AI Models
 ai_models = AIModels()
 pdf_processor = PDFProcessor()
+file_processor = FileProcessor()
 
 @app.route('/health', methods=['GET'])
 def health_check():
@@ -228,11 +240,13 @@ def record_activity():
         if not db:
             return jsonify({'success': False, 'error': 'Database not available'}), 500
 
+        date_key = data.get('date_key')
         engagement = update_user_profile(
             user_id,
             name=name,
             email=email,
-            record_activity=True
+            record_activity=True,
+            date_key=date_key
         )
         total_points = recalculate_user_points(user_id)
 
@@ -342,6 +356,7 @@ def submit_quiz():
         user_email = data.get('email', '')
         score = int(data.get('score', 0))
         total_questions = int(data.get('total_questions', 0))
+        questions = data.get('questions', [])  # full quiz questions for history/retake
 
         if not user_id or total_questions <= 0:
             return jsonify({'success': False, 'error': 'Invalid quiz submission data'}), 400
@@ -354,15 +369,18 @@ def submit_quiz():
                 'score': score,
                 'total_questions': total_questions,
                 'points_earned': points_earned,
+                'questions': questions,
                 'created_at': firestore.SERVER_TIMESTAMP
             })
 
+            date_key = data.get('date_key')
             update_user_profile(
                 user_id,
                 name=user_name,
                 email=user_email,
                 points_delta=0,
-                record_activity=False
+                record_activity=True,
+                date_key=date_key
             )
             total_points = recalculate_user_points(user_id)
         else:
@@ -379,20 +397,91 @@ def submit_quiz():
         print(f"Error submitting quiz: {traceback.format_exc()}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/quiz/history/<user_id>', methods=['GET'])
+def get_quiz_history(user_id):
+    try:
+        if not db:
+            return jsonify({'success': False, 'error': 'Database not available'}), 500
+
+        results = db.collection('quiz_results') \
+            .where(filter=firestore.FieldFilter('user_id', '==', user_id)) \
+            .stream()
+
+        history = []
+        for doc in results:
+            data = doc.to_dict() or {}
+            created_at = data.get('created_at')
+            timestamp_value = 0
+            if created_at and hasattr(created_at, 'timestamp'):
+                timestamp_value = created_at.timestamp()
+            history.append({
+                'id': doc.id,
+                'score': data.get('score', 0),
+                'total_questions': data.get('total_questions', 0),
+                'points_earned': data.get('points_earned', 0),
+                'questions': data.get('questions', []),
+                'created_at_timestamp': timestamp_value,
+            })
+
+        history.sort(key=lambda x: x['created_at_timestamp'], reverse=True)
+
+        return jsonify({'success': True, 'history': history[:20]})
+
+    except Exception as e:
+        print(f"Error fetching quiz history: {traceback.format_exc()}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @app.route('/api/study-plan/generate', methods=['POST'])
 def generate_study_plan():
     try:
-        data = request.json
-        syllabus_text = data.get('syllabus')
-        days_available = data.get('days', 30)
-        exam_date = data.get('exam_date')
-        user_id = data.get('user_id')
+        # Check if file is uploaded
+        if 'file' in request.files:
+            file = request.files['file']
+            user_id = request.form.get('user_id')
+            days_available = int(request.form.get('days', 30))
+            exam_date = request.form.get('exam_date')
+            
+            if not file:
+                return jsonify({'success': False, 'error': 'No file provided'}), 400
+            
+            # Process file (zip or individual file)
+            file_name = file.filename.lower()
+            
+            if file_name.endswith('.zip'):
+                result = file_processor.extract_text_from_zip(file)
+                if not result['success']:
+                    return jsonify(result), 400
+                syllabus_text = result['content']
+                files_info = f"Processed {result['total_files']} files from zip: {', '.join(result['files_processed'][:5])}"
+            else:
+                result = file_processor.extract_text_from_file(file)
+                if not result['success']:
+                    return jsonify(result), 400
+                syllabus_text = result['content']
+                files_info = f"Processed file: {result['files_processed'][0]}"
+        else:
+            # Fallback to JSON body for backward compatibility
+            data = request.json
+            syllabus_text = data.get('syllabus')
+            days_available = data.get('days', 30)
+            exam_date = data.get('exam_date')
+            user_id = data.get('user_id')
+            files_info = "Using provided text"
+        
+        if not syllabus_text or len(syllabus_text.strip()) < 50:
+            return jsonify({'success': False, 'error': 'Insufficient content to generate study plan'}), 400
         
         # Generate study plan using AI
         study_plan = ai_models.generate_study_plan(syllabus_text, days_available)
+        
+        if 'error' in study_plan:
+            return jsonify({'success': False, 'error': study_plan.get('error')}), 500
+        
         plan_response = {
             'success': True,
-            'study_plan': study_plan
+            'study_plan': study_plan,
+            'files_info': files_info
         }
         
         # Store in Firestore keyed by user for easy retrieval
@@ -558,6 +647,10 @@ def update_progress():
         points_awarded = 0
         if completed and topic not in completed_topics:
             completed_topics.append(topic)
+            # Record activity when completing a study topic
+            date_key = data.get('date_key')
+            update_user_profile(user_id, record_activity=True, date_key=date_key)
+            recalculate_user_points(user_id)
         elif not completed:
             completed_topics = [item for item in completed_topics if item != topic]
         
@@ -612,7 +705,7 @@ def get_progress(user_id):
             user_id,
             name=user_data.get('name'),
             email=user_data.get('email'),
-            record_activity=True
+            record_activity=False
         )
         if engagement:
             user_data['streak'] = engagement.get('streak', user_data.get('streak', 0))
@@ -973,6 +1066,11 @@ def save_user_history():
             doc_ref = db.collection('user_history').document()
             doc_ref.set(payload)
             payload['id'] = doc_ref.id
+
+        # Record activity for using helper tools (flashcards, summarizer, assistant)
+        date_key = data.get('date_key')
+        update_user_profile(user_id, record_activity=True, date_key=date_key)
+        recalculate_user_points(user_id)
             
         return jsonify({'success': True, 'item': payload})
     except Exception as e:

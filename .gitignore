@@ -1,33 +1,65 @@
-# OS / Editor
-.DS_Store
-Thumbs.db
-.vscode/
-.idea/
-
-# Python virtual environments
-.venv/
-venv/
-*/.venv/
-*/venv/
-
-# Python cache
-**/__pycache__/
-**/*.py[cod]
-
-# Environment files
-.env
-.env.*
-!.env.example
-
-# Backend secrets
-backend/firebase-credentials.json
-
-# Frontend dependencies/build
+# Dependencies
 frontend/node_modules/
+backend/.venv/
+backend/__pycache__/
+
+# Build outputs
 frontend/build/
+frontend/dist/
+
+# Environment variables (sensitive)
+backend/.env
+frontend/.env
+*.env
+
+# Firebase credentials (sensitive)
+backend/firebase-credentials.json
+frontend/firebase-credentials.json
 
 # Logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Python
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.so
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
