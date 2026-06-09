@@ -137,17 +137,25 @@ Add screenshots of:
 
 - Dashboard
   <img width="919" height="455" alt="image" src="https://github.com/user-attachments/assets/273c6609-2064-4ddc-aef6-92b3c60a1f1b" />
-<img width="905" height="366" alt="image" src="https://github.com/user-attachments/assets/a12f2bc4-9c95-401e-a0a5-9a1388f35648" />
+  <img width="905" height="366" alt="image" src="https://github.com/user-attachments/assets/a12f2bc4-9c95-401e-a0a5-9a1388f35648" />
 
 - Study Planner
   <img width="756" height="458" alt="image" src="https://github.com/user-attachments/assets/42a9aaf4-1229-4624-bb7c-0e65882e55d1" />
 
 - Quiz Generator
-  <img width="764" height="452" alt="image" src="https://github.com/user-attachments/assets/f7ec1e89-d0c3-47e8-acc7-0c8b7c3e637a" />
+  <img width="685" height="470" alt="image" src="https://github.com/user-attachments/assets/0e36a016-a33e-4daf-ada7-d804cb15858e" />
+  <img width="407" height="464" alt="image" src="https://github.com/user-attachments/assets/3e384736-7be2-458f-b147-c021a14a47f9" />
 
 - Flashcards
+  <img width="568" height="468" alt="image" src="https://github.com/user-attachments/assets/016fa866-47b9-42de-8961-e8ea93409bb6" />
+  <img width="524" height="464" alt="image" src="https://github.com/user-attachments/assets/3960e920-47e0-459a-8190-e2532ff970e9" />
+
 - Pomodoro Timer
+  <img width="573" height="465" alt="image" src="https://github.com/user-attachments/assets/6c306a10-921a-4c7c-8996-8c0ad9fa0161" />
+
 - Progress Analytics
+  <img width="684" height="470" alt="image" src="https://github.com/user-attachments/assets/e207ee54-1fff-47d4-bb3b-365f65899e28" />
+  <img width="659" height="472" alt="image" src="https://github.com/user-attachments/assets/99255940-3b5f-4c14-95e2-8ef197cde721" />
 
 ---
 
