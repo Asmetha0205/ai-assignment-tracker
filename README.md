@@ -143,14 +143,17 @@ Add screenshots of:
   <img width="756" height="458" alt="image" src="https://github.com/user-attachments/assets/42a9aaf4-1229-4624-bb7c-0e65882e55d1" />
 
 - Quiz Generator
+
   <img width="685" height="470" alt="image" src="https://github.com/user-attachments/assets/0e36a016-a33e-4daf-ada7-d804cb15858e" />
   <img width="407" height="464" alt="image" src="https://github.com/user-attachments/assets/3e384736-7be2-458f-b147-c021a14a47f9" />
 
 - Flashcards
+
   <img width="568" height="468" alt="image" src="https://github.com/user-attachments/assets/016fa866-47b9-42de-8961-e8ea93409bb6" />
   <img width="524" height="464" alt="image" src="https://github.com/user-attachments/assets/3960e920-47e0-459a-8190-e2532ff970e9" />
 
 - Pomodoro Timer
+
   <img width="573" height="465" alt="image" src="https://github.com/user-attachments/assets/6c306a10-921a-4c7c-8996-8c0ad9fa0161" />
 
 - Progress Analytics
