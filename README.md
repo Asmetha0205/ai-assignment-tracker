@@ -133,8 +133,6 @@ I also collaborated on feature enhancement, testing, and improving the overall u
 
 ## Screenshots
 
-Add screenshots of:
-
 - Dashboard
   <img width="919" height="455" alt="image" src="https://github.com/user-attachments/assets/273c6609-2064-4ddc-aef6-92b3c60a1f1b" />
   <img width="905" height="366" alt="image" src="https://github.com/user-attachments/assets/a12f2bc4-9c95-401e-a0a5-9a1388f35648" />
