@@ -596,34 +596,41 @@ class AIModels:
         if len(cleaned_text) < 80:
             return []
 
-        if self.use_gemini:
+        if self.use_gemini or self.use_groq:
             prompt = dedent(f"""
-            You are an educational quiz generator. Create {num_questions} multiple-choice questions based on the content below.
-            Return valid JSON in this format:
+            You are an educational quiz generator. Create exactly {num_questions} multiple-choice questions based on the content below.
+            Every question MUST have exactly 4 answer options (A, B, C, D). Do NOT create True/False questions.
+
+            Return ONLY valid JSON — no markdown, no code fences, no explanation. Just a raw JSON array.
+
+            Format:
             [
               {{
                 "question": "Question text?",
                 "options": ["Option A", "Option B", "Option C", "Option D"],
                 "answer": "Option A",
-                "explanation": "Why the answer is correct"
+                "explanation": "One sentence explaining why the answer is correct."
               }}
             ]
-            Requirements:
-            - Use clear, concise wording
-            - Options must be unique per question
-            - Answers must exactly match one of the options
-            - Provide a short explanation (1 sentence)
-            - Cover different aspects of the content
+
+            Rules:
+            - ALWAYS provide exactly 4 options per question
+            - NEVER use True/False as the only options
+            - Make 3 plausible distractors (wrong options) so the question is genuinely challenging
+            - The "answer" field must exactly match one of the strings in "options"
+            - Vary question types: definitions, comparisons, cause-and-effect, applications
+            - Cover different parts of the content — do not repeat the same topic
 
             Content:
             \"\"\"{cleaned_text[:4000]}\"\"\"
-            """)
+
+            JSON array:""")
             response = self._call_ai(prompt, max_output_tokens=4096)
             quiz = self._parse_quiz_response(response)
             if quiz:
                 return quiz
 
-        # Fallback to simple fact-based questions
+        # Fallback to fact-based MCQ questions (no AI)
         return self._fallback_quiz(cleaned_text, num_questions)
 
     def generate_flashcards(self, text, num_cards=8):
@@ -1745,18 +1752,106 @@ class AIModels:
         return quiz_questions if quiz_questions else None
 
     def _fallback_quiz(self, text, num_questions):
+        """Generate basic 4-option MCQ questions without AI, from sentence pairs."""
         sentences = self._split_into_sentences(text)
-        sentences = [s for s in sentences if len(s.split()) > 5]
+        sentences = [s.strip() for s in sentences if len(s.split()) > 6]
         questions = []
-        
-        for sentence in sentences[:num_questions]:
-            true_statement = sentence.strip()
-            false_statement = re.sub(r'\b(is|are|was|were|has|have)\b', 'is not', true_statement, count=1, flags=re.IGNORECASE)
-            questions.append({
-                'question': f"True or False: {true_statement}",
-                'options': ['True', 'False'],
-                'answer': 'True',
-                'explanation': true_statement
-            })
-        
-        return questions
+
+        # Extract simple keyword-answer pairs from sentences
+        # Pattern: "X is/are/was Y" → ask "What is X?" with Y as the correct answer
+        keyword_re = re.compile(
+            r'^(.{5,60}?)\s+(?:is|are|was|were|refers to|defined as|means)\s+(.{5,120})',
+            re.IGNORECASE
+        )
+
+        # Build a pool of short candidate answers from sentences for distractors
+        candidate_answers = []
+        for s in sentences:
+            words = s.split()
+            if 4 <= len(words) <= 12:
+                candidate_answers.append(s.strip().rstrip('.'))
+
+        def pick_distractors(correct, pool, n=3):
+            """Pick n distractor strings from pool that differ from correct."""
+            distractors = [p for p in pool if p.lower() != correct.lower()]
+            # Shuffle deterministically based on correct text length to avoid randomness issues
+            import random
+            rng = random.Random(len(correct))
+            rng.shuffle(distractors)
+            return distractors[:n]
+
+        used_sentences = set()
+        for sentence in sentences:
+            if len(questions) >= num_questions:
+                break
+            if sentence in used_sentences:
+                continue
+
+            m = keyword_re.match(sentence)
+            if m:
+                subject = m.group(1).strip().rstrip(',')
+                correct_answer = m.group(2).strip().rstrip('.')
+                # Keep answers reasonably short
+                if len(correct_answer.split()) > 15:
+                    correct_answer = ' '.join(correct_answer.split()[:12]) + '...'
+
+                distractors = pick_distractors(correct_answer, candidate_answers)
+                if len(distractors) < 3:
+                    continue  # not enough material for a good MCQ — skip
+
+                import random
+                rng = random.Random(len(subject))
+                all_opts = [correct_answer] + distractors[:3]
+                rng.shuffle(all_opts)
+
+                questions.append({
+                    'question': f"What best describes '{subject}'?",
+                    'options': all_opts,
+                    'answer': correct_answer,
+                    'explanation': sentence.strip()
+                })
+                used_sentences.add(sentence)
+            else:
+                # Generic fill-in-the-blank style: mask a key noun phrase
+                words = sentence.split()
+                if len(words) < 8:
+                    continue
+                # Pick a word roughly in the middle to blank out (avoid stop words)
+                stop = {'the','a','an','is','are','was','were','of','in','on','at','to','and','or','but','with','for'}
+                candidates_idx = [i for i, w in enumerate(words) if w.lower().strip('.,') not in stop and len(w) > 4]
+                if not candidates_idx:
+                    continue
+
+                import random
+                rng = random.Random(len(sentence))
+                blank_idx = rng.choice(candidates_idx)
+                correct_word = words[blank_idx].strip('.,!?;:')
+
+                blanked = words[:]
+                blanked[blank_idx] = '_____'
+                question_text = ' '.join(blanked)
+
+                # Build 3 distractors from other long words in the text
+                other_words = list({
+                    w.strip('.,!?;:') for w in ' '.join(sentences).split()
+                    if len(w) > 4 and w.lower().strip('.,!?;:') != correct_word.lower()
+                    and w.lower().strip('.,!?;:') not in stop
+                })
+                rng.shuffle(other_words)
+                distractors = other_words[:3]
+                if len(distractors) < 3:
+                    continue
+
+                all_opts = [correct_word] + distractors
+                rng.shuffle(all_opts)
+
+                questions.append({
+                    'question': f"Fill in the blank: {question_text}",
+                    'options': all_opts[:4],
+                    'answer': correct_word,
+                    'explanation': f"The complete sentence is: {sentence.strip()}"
+                })
+                used_sentences.add(sentence)
+
+        return questions[:num_questions]
+
